@@ -1,6 +1,10 @@
 int out1 = 3;
-int out2 = 5;
-int out3 = 6;
+int enable1 = 5;
+int out2 = 6;
+int enable2 = 9;
+int out3 = 10;
+int enable3 = 11;
+
 int test = 13;
 
 int test_val = 0;
@@ -22,11 +26,46 @@ void setup() {
   pinMode(out1, OUTPUT);
   pinMode(out2, OUTPUT);
   pinMode(out3, OUTPUT);
+  pinMode(enable1, OUTPUT);
+  pinMode(enable2, OUTPUT);
+  pinMode(enable3, OUTPUT);
   pinMode(test, OUTPUT);
   Serial.begin(9600);
 }
 
 void loop() {
+  handleSerial();
+  
+  period = 1.0 / frequency;
+  
+  write(255, 255, 0, 255, 0, 0);
+  d();
+  write(255, 255, 0, 0, 0, 255);
+  d();
+  write(0, 0, 255, 255, 0, 255);
+  d();
+  write(0, 255, 255, 255, 0, 0);
+  d();
+  write(0, 255, 0, 0, 255, 255);
+  d();
+  write(0, 0, 0, 255, 255, 255);
+  d();
+}
+
+void write(float x, float ex, float y, float ey, float z, float ez) {
+  analogWrite(out1, x);
+  analogWrite(out2, y);
+  analogWrite(out3, z);
+  analogWrite(enable1, ex);
+  analogWrite(enable2, ey);
+  analogWrite(enable3, ez);
+}
+
+void d() {
+  delay(1000.0 * period / 6.0);
+}
+
+void handleSerial() {
   if (Serial.available() > 0) {
     while ((read_val = Serial.read()) > -1) {
       Serial.println(read_val);
@@ -73,27 +112,4 @@ void loop() {
       }
     }
   }
-  
-  // Calculate offset
-  period = 1.0 / frequency;
-  offset = 1.0 / (3 * frequency);
-  
-  // Step
-  step_count++;
-  x += period / points_per_period;
-  
-  // Sinusoidally Modulate Pulse
-  analogWrite(out1, f(x));
-  analogWrite(out2, f(x - offset));
-  analogWrite(out3, f(x - 2 * offset));
-  
-  if (!(2 * step_count % round(points_per_period))) {
-    digitalWrite(test, (test_val = !test_val)); // Frequency Check  
-  }
-  
-  delay(1000 * period / points_per_period);
-}
-
-int f(float x) {
-  return abs(255 * (pow(sin(2 * PI * frequency / 2 * x), 20)));
 }
